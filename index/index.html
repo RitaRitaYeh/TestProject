@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test ECharts</title>
+</head>
+<body>
+
+<div id='BloodPressureChartCanvas' style='width:100%; height:400px;'></div>
+
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.3.3/echarts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.js"></script>
+<script>
+let BloodPressureFakeData = {
+    "AppSystolicBloodPressure": [
+        [
+            1660566600000,
+            160
+        ],
+        [
+            1660548600000,
+            180
+        ],
+        [
+            1660530600000,
+            150
+        ],
+        [
+            1660480200000,
+            160
+        ],
+        [
+            1660462200000,
+            180
+        ],
+        [
+            1660444200000,
+            150
+        ],
+        [
+            1660393800000,
+            160
+        ],
+        [
+            1660375800000,
+            180
+        ],
+        [
+            1660357800000,
+            150
+        ],
+        [
+            1660307400000,
+            160
+        ],
+        [
+            1660289400000,
+            180
+        ],
+    ],
+    "AppDiastolicBloodPressure": [
+        [
+            1660566600000,
+            110
+        ],
+        [
+            1660548600000,
+            120
+        ],
+        [
+            1660030200000,
+            120
+        ],
+    ],
+    "AppPulse": [
+        [
+            1660566600000,
+            65
+        ],
+    ],
+    "HisSystolicBloodPressure": [
+        [
+            1655136000000,
+            140
+        ],
+        [
+            1653926400000,
+            167
+        ],
+        [
+            1648483200000,
+            185
+        ],
+        [
+            1643040000000,
+            167
+        ],
+        [
+            1638806400000,
+            164
+        ],
+        [
+            1633968000000,
+            192
+        ],
+        [
+            1629129600000,
+            168
+        ],
+        [
+            163129600000,
+            280
+        ]
+    ],
+    "HisDiastolicBloodPressure": [
+        [
+            1655136000000,
+            77
+        ],
+        [
+            1653926400000,
+            90
+        ],
+        [
+            1648483200000,
+            83
+        ],
+        [
+            1643040000000,
+            100
+        ],
+        [
+            1638806400000,
+            88
+        ],
+        [
+            1633968000000,
+            96
+        ],
+        [
+            1629129600000,
+            89
+        ],
+        [
+            163129600000,
+            112
+        ]
+    ],
+    "HisPulse": [
+        [
+            1655136000000,
+            80
+        ],
+        [
+            1653926400000,
+            92
+        ],
+        [
+            1648483200000,
+            88
+        ],
+        [
+            1643040000000,
+            95
+        ],
+        [
+            1638806400000,
+            81
+        ],
+        [
+            1633968000000,
+            85
+        ],
+        [
+            1629129600000,
+            112
+        ],
+        [
+            163129600000,
+            112
+        ]
+    ]
+}
+</script>
+
+<script>
+
+
+    
+    // 產生折線區域的中心圖。
+    let dif = [];
+    if (BloodPressureFakeData.AppDiastolicBloodPressure && BloodPressureFakeData.AppDiastolicBloodPressure.length > 0) {
+        for (let i = 0; i < BloodPressureFakeData.AppDiastolicBloodPressure.length; i++) {
+            dif[i] = [];
+        }
+        for (let i = 0; i < BloodPressureFakeData.AppDiastolicBloodPressure.length; i++) {
+            for (let j = 0; j < BloodPressureFakeData.AppDiastolicBloodPressure[0].length; j++) {
+                if (j == 0) {
+                    dif[i][j] = BloodPressureFakeData.AppDiastolicBloodPressure[i][j];
+                } else {
+                    dif[i][j] = BloodPressureFakeData.AppSystolicBloodPressure[i][j] - BloodPressureFakeData.AppDiastolicBloodPressure[i][j];
+                }
+            }
+        }
+    }
+
+    let echartsObj = echarts.init(document.querySelector('#BloodPressureChartCanvas'));
+
+    let option = {
+	    // 設定線條的顏色
+        color: ['#C648E5', '#F4B350','#FFFFFF', '#EE7701', '#6BB9F0', '#556FC8', '#07A012'],
+        title: {
+            text: '',
+            textStyle: {
+                fontFamily: 'lato'
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                show: true,
+                type: 'cross',
+                lineStyle: {
+                    type: 'dashed',
+                    width: 1
+                }
+            },
+			// 格式化滑鼠移動到圖上時，會顯示的提示
+            formatter: function (params) {
+			    // params 會是滑鼠移動到圖上時，有幾個值，params中就會有幾個值，（目前對應：BloodPressureFakeData 中的值）
+				// 資料會在 params[0].data 中
+                var date = echarts.time.format(new Date(params[0].data[0]), '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}');
+                var html = `${date} <br/>`;
+                for (var i in params) {
+                    var param = params[i];
+                    html += `${param.marker }  ${param.seriesName}：<span style="color: #000000">${param.value[1]}</span><br />`;
+                }
+                return html;
+            },
+        },
+		// 顯示圖表的說明。
+        legend: {
+		    // data要與資料的name對應。
+            data: ['資料一', '資料二-1', '資料二-2', '資料三', '資料四', '資料五'],
+            show: true,
+            type: "scroll",
+            zlevel: 1,
+            icon: "circle",
+            top: "5%",
+            right: "5%",
+            width: "auto",
+            height: "auto",
+            orient: "horizontal",
+            align: "auto",
+            padding: 5,
+            itemWidth: 6,
+            itemGap: 20,
+            itemHeight: 14,
+            symbolKeepAspect: true
+        },
+        calculable: true,
+        xAxis: [
+            {
+			    // 當設定為時間時，可以使用，x軸顯示的區間要是多少。
+                interval: 3600 * 24 * 1000 * 1,
+                splitLine: { show: false },
+                alignTicks: true,
+                type: 'time',
+                axisLabel: {
+                    formatter: (function (value) {
+                        return moment(value).format('MM/DD');
+                    })
+                },
+
+            }
+        ],
+        yAxis: [{
+            type: 'value',
+            name: '單位mmHg',
+            min: 0,
+            max: 300,
+            interval: 50,
+            axisLabel: {
+                formatter: '{value}'
+            }
+        }],
+        dataZoom: [
+            {
+                startValue: '2021-06-01'
+            },
+            {
+                type: 'inside'
+            }
+        ],
+        series: [
+            {
+                backgroundColor: "#C648E5",
+                name: '資料一',
+                type: 'line',
+                data: BloodPressureFakeData.AppPulse,
+                symbolSize: 8,
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + '分/次';
+                    }
+                }, markPoint: {
+				    // 如果標記不想要使用系統圖案，想要使用透明的話，可以使用這種方式：用一個透明小圖，替代圖案。
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+					// 標記點要顯示最大值，和最小值。
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                }
+            }, {
+                z: -1, // optional, makes the yAxis' splitLines appear on top
+                backgroundColor: "#6BB9F0",
+                name: '資料二-1',
+                type: 'line',
+                symbolSize: 0,
+                data: BloodPressureFakeData.AppDiastolicBloodPressure,
+                stack: 'x',
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + 'mmHg';
+                    }
+                }, markPoint: {
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                },
+            }, {
+                data: dif,
+                type: 'line',
+                stack: 'x',                  // stack name
+                stackStrategy: 'positive',   // strategy
+                lineStyle: {
+                    opacity: 0                 // hide line
+                },
+                symbol: 'none',              // hide symbol
+                areaStyle: {
+                    color: "#FCECD7",
+                },
+                tooltip: {
+                    show: false                // hide value on tooltip
+                }
+            }, {
+                z: -1, // optional, makes the yAxis' splitLines appear on top
+                backgroundColor: "#556FC8",
+                name: '資料二-2',
+                symbolSize: 0,
+                type: 'line',
+                data: BloodPressureFakeData.AppSystolicBloodPressure,
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + 'mmHg';
+                    }
+                }, markPoint: {
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                },
+            }, {
+                backgroundColor: "#6BB9F0",
+                name: '資料三',
+                type: 'line',
+                symbolSize: 8,
+                data: BloodPressureFakeData.HisDiastolicBloodPressure,
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + 'mmHg';
+                    }
+                }, markPoint: {
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                }
+            }, {
+                backgroundColor: "#556FC8",
+                name: '資料四',
+                type: 'line',
+                symbolSize: 8,
+                data: BloodPressureFakeData.HisSystolicBloodPressure,
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + 'mmHg';
+                    }
+                }, markPoint: {
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                }
+            }, {
+                backgroundColor: "#07A012",
+                name: '資料五',
+                type: 'line',
+                symbolSize: 8,
+                data: BloodPressureFakeData.HisPulse,
+                smooth: true,
+                tooltip: {
+                    valueFormatter: function (value) {
+                        return value + 'mmHg';
+                    }
+                }, markPoint: {
+                    symbol: 'image://data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                    symbolSize: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 0
+                    },
+                    data: [{
+                        type: 'max',
+                        name: 'Max',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }, {
+                        type: 'min',
+                        name: 'Min',
+                        itemStyle: {
+                            color: '#000',
+                        }
+                    }]
+                }
+            }
+        ]
+    }
+    echartsObj.setOption(option);
+    echartsObj.on('legendselectchanged', function (params) {
+        var isSelected = params.selected[params.name];
+        console.log(
+            (isSelected ? 'Selected' : 'Not Selected') + 'legend' + params.name
+        );
+        console.log(params.selected);
+    });
+
+    window.addEventListener('resize', echartsObj.resize);
+
+
+</script>
+<div>
+個管師人很好<br/>聯新很棒 <br/> 脊椎醫療中心很暖很貼心 <br/> 給我無微不至的照顧
+<br/>
+<img src='https://www.medicaltravel.org.tw/FileHospitalArtPic.ashx?id=1247&w=800&h=600' width='200' height='100'/>
+</div>
+</html>
